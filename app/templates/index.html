@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Language Prediction</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
+</head>
+<body>
+    <h1>Sign Language Prediction</h1>
+    
+    <form action="/" method="post" enctype="multipart/form-data">
+        <label for="file">Choose a sign language image:</label>
+        <input type="file" name="file" accept=".jpg, .jpeg, .png" required>
+        <button type="submit">Predict</button>
+    </form>
+    
+    {% if original_image is defined %}
+        <p>Predicted Letter: {{ predicted_letter }}</p>
+        <img src="data:image/png;base64,{{ original_image }}" alt="Original Image">
+    {% endif %}
+</body>
+</html>

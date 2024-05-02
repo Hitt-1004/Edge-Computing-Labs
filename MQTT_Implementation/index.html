@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Location Dashboard</title>
+    <style>
+        #map {
+            height: 400px;
+            width: 100%;
+        }
+        #locationList {
+            list-style-type: none;
+            padding: 0;
+        }
+        #locationList li {
+            margin-bottom: 10px;
+        }
+    </style>
+    <!-- Include Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+</head>
+<body>
+    <h1>Vehicle Location Dashboard</h1>
+    <div id="map"></div>
+    <h2>Location List</h2>
+    <ul id="locationList"></ul>
+
+    <!-- Include Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Initialize Leaflet map
+        const map = L.map('map').setView([0, 0], 2);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // WebSocket connection
+        const ws = new WebSocket('ws://public.mqtthq.com:8083/mqtt'); 
+
+        ws.onopen = () => {
+            console.log('WebSocket connected');
+        };
+
+        ws.onconnect = () => {
+          console.log('Connecting to MQTT broker');
+          client.subscribe('vehicle/location', (err) => {
+            if (err) {
+              console.error('MQTT subscription error:', err);
+            } else {
+              console.log('Subscribed to MQTT topic for vehicle locations');
+            }
+          });
+        };
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            console.log('Received data:', data);
+
+            // Update map with vehicle location data
+            console.log('Updating map with vehicle location:', [data.latitude, data.longitude]);
+            map.setView([data.latitude, data.longitude], 13); // Center map on vehicle location
+            L.marker([data.latitude, data.longitude]).addTo(map)
+                .bindPopup(`Vehicle ${data.vehicleId}: Latitude ${data.latitude}, Longitude ${data.longitude}`)
+                .openPopup();
+
+            // Display location data on the page
+            const locationList = document.getElementById('locationList');
+            const listItem = document.createElement('li');
+            listItem.textContent = `Vehicle ${data.vehicleId}: Latitude ${data.latitude}, Longitude ${data.longitude}`;
+            locationList.appendChild(listItem);
+            console.log('Location added to list');
+        };
+
+        ws.onclose = () => {
+            console.log('WebSocket disconnected');
+        };
+    </script> 
+</body>
+</html>

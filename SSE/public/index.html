@@ -1,0 +1,80 @@
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-Time Task Dashboard</title>
+</head>
+<body>
+  <h1>Task Dashboard</h1>
+  <form id="taskForm">
+    <label for="taskTitle">New Task:</label>
+    <input type="text" id="taskTitle" required>
+    <button type="submit">Add Task</button>
+  </form>
+  <ul id="taskList"></ul>
+
+  <script>
+    const taskForm = document.getElementById('taskForm');
+    const taskTitleInput = document.getElementById('taskTitle');
+    const taskList = document.getElementById('taskList');
+
+    const eventSource = new EventSource('/sse');
+
+    // Listen for updates from the server
+    eventSource.addEventListener('message', (event) => {
+      const tasks = JSON.parse(event.data);
+      updateTaskList(tasks);
+    });
+
+    // Update the task list on the webpage
+    function updateTaskList(tasks) {
+      taskList.innerHTML = '';
+      tasks.forEach(task => {
+        const listItem = document.createElement('li');
+        listItem.innerHTML = `
+          ${task.title}
+          <input type="checkbox" ${task.completed ? 'checked' : ''} 
+            onchange="updateTask('${task.id}', this.checked)">
+        `;
+        taskList.appendChild(listItem);
+      });
+    }
+
+    // Submit form to add a new task
+    taskForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const title = taskTitleInput.value.trim();
+
+      if (title !== '') {
+        fetch('/add-task', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ title }),
+        })
+        .then(response => response.json())
+        .then(data => {
+          taskTitleInput.value = '';
+        })
+        .catch(error => console.error('Error adding task:', error));
+      }
+    });
+
+    // Update task status
+    function updateTask(taskId, completed) {
+      fetch(`/update-task/${taskId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ completed }),
+      })
+      .then(response => response.json())
+      .catch(error => console.error('Error updating task:', error));
+    }
+  </script>
+</body>
+</html>

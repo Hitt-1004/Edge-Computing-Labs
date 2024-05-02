@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fast-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: fast-app
+  template:
+    metadata:
+      labels:
+        app: fast-app
+    spec:
+      containers:
+      - name: fast-app
+        image: hitt1004/my_app:latest
+        ports:
+        - containerPort: 80

@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package joke;
+
+service JokeService {
+    rpc GetJoke (JokeRequest) returns (JokeResponse);
+}
+
+message JokeRequest {
+    // You can add any request parameters here if needed
+}
+
+message JokeResponse {
+    string joke = 1;
+}

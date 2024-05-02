@@ -1,0 +1,81 @@
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSocket Chat</title>
+</head>
+<body>
+  <div id="chat"></div>
+  <form id="messageForm">
+    <input type="text" id="messageInput" placeholder="Type your message...">
+    <button type="submit">Send</button>
+  </form>
+
+  <script>
+    const chatDiv = document.getElementById('chat');
+    const messageForm = document.getElementById('messageForm');
+    const messageInput = document.getElementById('messageInput');
+    let ws;
+
+    function connectToWebSocket() {
+      ws = new WebSocket(`ws://${window.location.host}`);
+
+      ws.onopen = () => {
+        console.log('WebSocket connection opened');
+        // Prompt user to enter a username and chat room
+        const username = prompt('Enter your username:');
+        const room = prompt('Enter the chat room name:');
+        // Join the chat room
+        ws.send(JSON.stringify({ type: 'join', username, room }));
+      };
+
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        handleWebSocketMessage(data);
+      };
+
+      ws.onclose = () => {
+        console.log('WebSocket connection closed');
+        setTimeout(connectToWebSocket, 1000); // Retry connection after 1 second
+      };
+    }
+
+    function handleWebSocketMessage(message) {
+      switch (message.type) {
+        case 'message':
+          appendMessage(message.username, message.content);
+          break;
+        case 'userList':
+          updateUsersList(message.userList);
+          break;
+      }
+    }
+
+    function appendMessage(username, content) {
+      const messageDiv = document.createElement('div');
+      messageDiv.textContent = `${username}: ${content}`;
+      chatDiv.appendChild(messageDiv);
+    }
+
+    function updateUsersList(userList) {
+      const userListDiv = document.createElement('div');
+      userListDiv.textContent = `Users in the room: ${userList.join(', ')}`;
+      chatDiv.appendChild(userListDiv);
+    }
+
+    messageForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const content = messageInput.value.trim();
+      if (content !== '') {
+        ws.send(JSON.stringify({ type: 'message', content }));
+        messageInput.value = '';
+      }
+    });
+
+    // Connect to WebSocket when the page loads
+    connectToWebSocket();
+  </script>
+</body>
+</html>

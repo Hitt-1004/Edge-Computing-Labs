@@ -1,0 +1,27 @@
+<!-- client.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Socket.io Client</title>
+</head>
+<body>
+  <input type="text" id="messageInput">
+  <button onclick="sendMessage()">Send Message</button>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.3/socket.io.js"></script>
+  <script>
+    const socket = io('http://127.0.0.1:3000');
+
+    function sendMessage() {
+      const message = document.getElementById('messageInput').value;
+      socket.emit('message', message);
+    }
+
+    socket.on('message', (data) => {
+      console.log('Received message from server:', data);
+    });
+  </script>
+</body>
+</html>

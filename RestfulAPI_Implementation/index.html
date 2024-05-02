@@ -1,0 +1,119 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>To-Do List</title>
+  <style>
+    .editable {
+      border: 1px solid #ccc;
+      padding: 5px;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>To-Do List</h1>
+  <ul id="taskList"></ul>
+  <form id="taskForm">
+    <input type="text" id="taskInput" placeholder="Add a new task" required>
+    <button type="submit">Add Task</button>
+  </form>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const taskList = document.getElementById('taskList');
+      const taskForm = document.getElementById('taskForm');
+      const taskInput = document.getElementById('taskInput');
+
+      // Function to fetch tasks from the server
+      const fetchTasks = async () => {
+        const response = await fetch('/tasks');
+        const tasks = await response.json();
+        displayTasks(tasks);
+      };
+
+      // Function to display tasks on the webpage
+      const displayTasks = (tasks) => {
+        taskList.innerHTML = '';
+        tasks.forEach(task => {
+          const li = document.createElement('li');
+          const span = document.createElement('span');
+          const editButton = document.createElement('button');
+
+          span.textContent = task.name;
+          li.appendChild(span);
+
+          // Add an "edit" button
+          editButton.textContent = 'Edit';
+          editButton.addEventListener('click', () => {
+            span.contentEditable = true;
+            span.classList.add('editable');
+          });
+          li.appendChild(editButton);
+
+          // Add a "submit" button for editing
+          const submitButton = document.createElement('button');
+          submitButton.textContent = 'Submit';
+          submitButton.style.display = 'none';
+          submitButton.addEventListener('click', async () => {
+            span.contentEditable = false;
+            span.classList.remove('editable');
+
+            // Update the task on the server
+            const updatedTask = { name: span.textContent };
+            const response = await fetch(`/tasks/${task.id}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(updatedTask),
+            });
+
+            const editedTask = await response.json();
+            fetchTasks(); // Fetch and display updated tasks
+          });
+          li.appendChild(submitButton);
+
+          // Add a "delete" button
+          const deleteButton = document.createElement('button');
+          deleteButton.textContent = 'Delete';
+          deleteButton.addEventListener('click', async () => {
+            // Delete the task on the server
+            await fetch(`/tasks/${task.id}`, {
+              method: 'DELETE',
+            });
+
+            fetchTasks(); // Fetch and display updated tasks
+          });
+          li.appendChild(deleteButton);
+
+          taskList.appendChild(li);
+        });
+      };
+
+      // Event listener for form submission
+      taskForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const newTask = { name: taskInput.value };
+        const response = await fetch('/tasks', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newTask),
+        });
+
+        const createdTask = await response.json();
+        taskInput.value = '';
+
+        fetchTasks(); // Fetch and display updated tasks
+      });
+
+      // Fetch tasks when the page loads
+      fetchTasks();
+    });
+  </script>
+</body>
+</html>

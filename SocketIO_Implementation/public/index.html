@@ -1,0 +1,44 @@
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Collaborative Code Editor</title>
+  <style>
+    body { margin: 0; font-family: 'Courier New', monospace; }
+    textarea { width: 100%; height: 100vh; }
+  </style>
+</head>
+<body>
+  <label for="room">Room:</label>
+  <input type="text" id="room" value="room1">
+  <button onclick="joinRoom()">Join Room</button>
+  <textarea id="code"></textarea>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.3/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    const codeTextArea = document.getElementById('code');
+
+    // Listen for code changes from the server
+    socket.on('code', (code) => {
+      codeTextArea.value = code;
+    });
+
+    // Handle textarea changes
+    codeTextArea.addEventListener('input', () => {
+      const code = codeTextArea.value;
+
+      // Send code changes to the server
+      socket.emit('code', code);
+    });
+
+    function joinRoom() {
+      const room = document.getElementById('room').value;
+      // Join the specified room
+      socket.emit('join', room);
+    }
+  </script>
+</body>
+</html>

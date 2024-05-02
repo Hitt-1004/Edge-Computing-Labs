@@ -1,0 +1,45 @@
+<!-- client.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RESTful API Client</title>
+</head>
+<body>
+  <input type="text" id="messageInput">
+  <button onclick="sendMessage()">Send Message</button>
+  <div id="messages"></div>
+
+  <script>
+    async function fetchMessages() {
+      const response = await fetch('http://127.0.0.1:3000/messages');
+      const data = await response.json();
+      const messagesElement = document.getElementById('messages');
+      messagesElement.innerHTML = data.map(message => `<div>${message.text}</div>`).join('');
+    }
+
+    async function sendMessage() {
+      const messageInput = document.getElementById('messageInput');
+      const text = messageInput.value;
+      messageInput.value = '';
+
+      const response = await fetch('http://127.0.0.1:3000/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ text })
+      });
+
+      if (response.ok) {
+        fetchMessages();
+      } else {
+        console.error('Failed to send message:', response.statusText);
+      }
+    }
+
+    fetchMessages();
+  </script>
+</body>
+</html>
